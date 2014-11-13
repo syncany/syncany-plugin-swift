@@ -10,7 +10,7 @@ Package: syncany-plugin-swift
 Architecture: ${pluginDebianArchitecture}
 Depends: ${pluginMiscDepends}, syncany (>= ${pluginAppMinVersion})
 Homepage: https://www.syncany.org/
-Description: Swift plugin for Syncany
+Description: OpenStack Swift plugin for Syncany
  This plugin makes it possible to use a Swift blockstorage as a backend
  for Syncany.
  .
