@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,6 +66,7 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
  */
 public class SwiftTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(SwiftTransferManager.class.getSimpleName());
+	private static final int SLEEP_INTERVAL_SECS = 1;
 
 	private final Account account;
 	private final Container container;
@@ -97,8 +99,9 @@ public class SwiftTransferManager extends AbstractTransferManager {
 	public void connect() throws StorageException {
 		// make a connect
 		try {
-			logger.log(Level.INFO, "Using swift account (quota {0} bytes used)", new Object[]{this.account.getBytesUsed()});
-		} catch (Exception e) {
+			logger.log(Level.INFO, "Using swift account (quota {0} bytes used)", new Object[] { this.account.getBytesUsed() });
+		}
+		catch (Exception e) {
 			throw new StorageException("Unable to connect to swift", e);
 		}
 	}
@@ -116,9 +119,11 @@ public class SwiftTransferManager extends AbstractTransferManager {
 			if (!testTargetExists() && createIfRequired) {
 				this.container.create();
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new StorageException("init: Cannot create required directories", e);
-		} finally {
+		}
+		finally {
 			disconnect();
 		}
 	}
@@ -133,20 +138,25 @@ public class SwiftTransferManager extends AbstractTransferManager {
 				File tempFile = createTempFile(localFile.getName());
 
 				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "Swift: Downloading {0} to temp file {1}", new Object[]{remotePath, tempFile});
+					logger.log(Level.INFO, "Swift: Downloading {0} to temp file {1}", new Object[] { remotePath, tempFile });
 				}
 
 				this.container.getObject(remotePath).downloadObject(tempFile);
 
 				// Move file
 				if (logger.isLoggable(Level.INFO)) {
-					logger.log(Level.INFO, "Swift: Renaming temp file {0} to file {1}", new Object[]{tempFile, localFile});
+					logger.log(Level.INFO, "Swift: Renaming temp file {0} to file {1}", new Object[] { tempFile, localFile });
 				}
 
 				localFile.delete();
 				FileUtils.moveFile(tempFile, localFile);
 				tempFile.delete();
-			} catch (IOException ex) {
+
+				if (logger.isLoggable(Level.INFO)) {
+					logger.log(Level.INFO, "Swift: Download to file {0} done", new Object[] { localFile });
+				}
+			}
+			catch (IOException ex) {
 				logger.log(Level.SEVERE, "Error while downloading file " + remoteFile.getName(), ex);
 				throw new StorageException(ex);
 			}
@@ -160,18 +170,25 @@ public class SwiftTransferManager extends AbstractTransferManager {
 
 		StoredObject tempObject = this.container.getObject(tempRemotePath);
 		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, "Swift: Uploading {0} to temp file {1}", new Object[]{localFile, tempRemotePath});
+			logger.log(Level.INFO, "Swift: Uploading {0} to temp file {1}", new Object[] { localFile, tempRemotePath });
 		}
 
 		tempObject.uploadObject(localFile);
+		blockUntilElementExists(tempObject);
 
 		// Move
 		if (logger.isLoggable(Level.INFO)) {
-			logger.log(Level.INFO, "Swift: Renaming temp file {0} to file {1}", new Object[]{tempRemotePath, remotePath});
+			logger.log(Level.INFO, "Swift: Renaming temp file {0} to file {1}", new Object[] { tempRemotePath, remotePath });
 		}
 
-		tempObject.copyObject(this.container, this.container.getObject(remotePath));
+		StoredObject finalObject = this.container.getObject(remotePath);
+		tempObject.copyObject(this.container, finalObject);
+		blockUntilElementExists(finalObject);
 		tempObject.delete();
+
+		if (logger.isLoggable(Level.INFO)) {
+			logger.log(Level.INFO, "Swift: Upload to file {0} done", new Object[] { remotePath });
+		}
 	}
 
 	@Override
@@ -187,10 +204,21 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		String sourceRemotePath = getRemoteFile(sourceFile);
 		String targetRemotePath = getRemoteFile(targetFile);
 
+		// Move
+		if (logger.isLoggable(Level.INFO)) {
+			logger.log(Level.INFO, "Swift: Moving file {0} to file {1}", new Object[] { sourceRemotePath, targetRemotePath });
+		}
+
 		StoredObject fromObject = this.container.getObject(sourceRemotePath);
 		StoredObject toObject = this.container.getObject(targetRemotePath);
 		fromObject.copyObject(this.container, toObject);
+		blockUntilElementExists(toObject);
 		fromObject.delete();
+
+		// Move
+		if (logger.isLoggable(Level.INFO)) {
+			logger.log(Level.INFO, "Swift: Moving file {0} to file {1} done", new Object[] { sourceRemotePath, targetRemotePath });
+		}
 	}
 
 	@Override
@@ -218,15 +246,20 @@ public class SwiftTransferManager extends AbstractTransferManager {
 	private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
 		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath;
-		} else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(DatabaseRemoteFile.class)) {
 			return databasesPath;
-		} else if (remoteFile.equals(ActionRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(ActionRemoteFile.class)) {
 			return actionsPath;
-		} else if (remoteFile.equals(TransactionRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(TransactionRemoteFile.class)) {
 			return transactionsPath;
-		} else if (remoteFile.equals(TempRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(TempRemoteFile.class)) {
 			return tempPath;
-		} else {
+		}
+		else {
 			return "";
 		}
 	}
@@ -244,11 +277,13 @@ public class SwiftTransferManager extends AbstractTransferManager {
 
 				logger.log(Level.INFO, "testTargetCanWrite: Can write, test file created/deleted successfully.");
 				return true;
-			} else {
+			}
+			else {
 				logger.log(Level.INFO, "testTargetCanWrite: Can NOT write, target does not exist.");
 				return false;
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			logger.log(Level.INFO, "testTargetCanWrite: Can NOT write to target.", e);
 			return false;
 		}
@@ -259,7 +294,8 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		if (this.container.exists()) {
 			logger.log(Level.INFO, "testTargetExists: Target does exist.");
 			return true;
-		} else {
+		}
+		else {
 			logger.log(Level.INFO, "testTargetExists: Target does NOT exist.");
 			return false;
 		}
@@ -278,13 +314,28 @@ public class SwiftTransferManager extends AbstractTransferManager {
 			if (this.container.getObject(repoFilePath).exists()) {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file exists at " + repoFilePath);
 				return true;
-			} else {
+			}
+			else {
 				logger.log(Level.INFO, "testRepoFileExists: Repo file DOES NOT exist at " + repoFilePath);
 				return false;
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.log(Level.INFO, "testRepoFileExists: Exception when trying to check repo file existence.", e);
 			return false;
 		}
 	}
+
+	private void blockUntilElementExists(StoredObject storedObject) {
+		while (!storedObject.exists()) {
+			try {
+				TimeUnit.SECONDS.sleep(SLEEP_INTERVAL_SECS);
+			}
+			catch (InterruptedException e) {
+				logger.log(Level.SEVERE, "Unable to wait until object exists", e);
+				throw new RuntimeException("Swift: Unable to wait until object exists", e);
+			}
+		}
+	}
+
 }
