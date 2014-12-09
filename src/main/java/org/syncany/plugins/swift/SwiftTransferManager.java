@@ -33,6 +33,7 @@ import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
 import org.syncany.config.Config;
+import org.syncany.operations.cleanup.CleanupOperationResult.CleanupResultCode;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
@@ -218,15 +219,20 @@ public class SwiftTransferManager extends AbstractTransferManager {
 	private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
 		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath;
-		} else if (remoteFile.equals(DatabaseRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(DatabaseRemoteFile.class) || remoteFile.equals(CleanupRemoteFile.class)) {
 			return databasesPath;
-		} else if (remoteFile.equals(ActionRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(ActionRemoteFile.class)) {
 			return actionsPath;
-		} else if (remoteFile.equals(TransactionRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(TransactionRemoteFile.class)) {
 			return transactionsPath;
-		} else if (remoteFile.equals(TempRemoteFile.class)) {
+		}
+		else if (remoteFile.equals(TempRemoteFile.class)) {
 			return tempPath;
-		} else {
+		}
+		else {
 			return "";
 		}
 	}
