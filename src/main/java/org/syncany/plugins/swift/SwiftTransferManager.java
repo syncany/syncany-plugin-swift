@@ -33,9 +33,12 @@ import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
 import org.syncany.config.Config;
+import org.syncany.plugins.swift.SwiftTransferManager.SwiftReadAfterWriteConsistentFeatureExtension;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.StorageException;
 import org.syncany.plugins.transfer.TransferManager;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistent;
+import org.syncany.plugins.transfer.features.ReadAfterWriteConsistentFeatureExtension;
 import org.syncany.plugins.transfer.files.ActionRemoteFile;
 import org.syncany.plugins.transfer.files.CleanupRemoteFile;
 import org.syncany.plugins.transfer.files.DatabaseRemoteFile;
@@ -64,6 +67,7 @@ import org.syncany.plugins.transfer.files.TransactionRemoteFile;
  *
  * @author Christian Roth <christian.roth@port17.de>
  */
+@ReadAfterWriteConsistent(extension = SwiftReadAfterWriteConsistentFeatureExtension.class)
 public class SwiftTransferManager extends AbstractTransferManager {
 	private static final Logger logger = Logger.getLogger(SwiftTransferManager.class.getSimpleName());
 
@@ -216,7 +220,8 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		return getRemoteFilePath(remoteFile.getClass()) + "/" + remoteFile.getName();
 	}
 
-	private String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
+	@Override
+	public String getRemoteFilePath(Class<? extends RemoteFile> remoteFile) {
 		if (remoteFile.equals(MultichunkRemoteFile.class)) {
 			return multichunksPath;
 		}
@@ -291,6 +296,19 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		} catch (Exception e) {
 			logger.log(Level.INFO, "testRepoFileExists: Exception when trying to check repo file existence.", e);
 			return false;
+		}
+	}
+
+	public static class SwiftReadAfterWriteConsistentFeatureExtension implements ReadAfterWriteConsistentFeatureExtension {
+		private final SwiftTransferManager swiftTransferManager;
+
+		public SwiftReadAfterWriteConsistentFeatureExtension(SwiftTransferManager swiftTransferManager) {
+			this.swiftTransferManager = swiftTransferManager;
+		}
+
+		@Override
+		public boolean exists(RemoteFile remoteFile) throws StorageException {
+			return swiftTransferManager.container.getObject(swiftTransferManager.getRemoteFile(remoteFile)).exists();
 		}
 	}
 }
