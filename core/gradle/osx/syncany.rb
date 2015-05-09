@@ -2,12 +2,12 @@ require "formula"
 
 class Syncany < Formula
   homepage "https://www.syncany.org"
-  url "https://codeload.github.com/syncany/syncany/tar.gz/v0.4.3-alpha"
-  sha256 "1e749bf505c0e2dcecfbb08b929711dc179b70b44d5f93e8e2558f628abcb735"
-  version "0.4.3-alpha"
+  url "https://codeload.github.com/syncany/syncany/tar.gz/v0.4.5-alpha"
+  sha256 "957537a7177a5234e794d871043e67ac8e06ff3ff1ee059e599dfd477c5bb8e5"
+  version "0.4.5-alpha"
   head "https://github.com/syncany/syncany.git", :branch => "develop"
 
-  depends_on :java => "1.7"
+  depends_on :java => "1.7+"
   depends_on "gradle" => "2.2"
 
   def install

@@ -1,13 +1,51 @@
 Change Log
 ==========
 
-### Syncany 0.4.4-alpha (Date: Tbd.)
+### Syncany 0.4.6-alpha (Date: TBA)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + Use smaller transactions in Up #364
+  + Add 'Use short links' option to GUI
+- Bugfixes and other things:
+  + Update licensing to match GPLv3+ #457
+  + Prepare fix for read-after-write issue with S3 and Swift plugin #456
+  + Change default crypto to just AES-128/GCM
+
+### Syncany 0.4.5-alpha (Date: 8 May 2015)
+- Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
+- Features and significant changes:
+  + Add default .syignore file with typically unwanted files (.DS_Store, ...) #393
+  + Add 'prevent standby' toggle in GUI #387
+  + Add theme and tray icon selector in GUI
+  + Add update check to GUI in general settings panel, and daily update check #415
+  + Add support for enums as transfer setting values #280
+  + Add automatic OAuth token handling #426
+  + Add support for feature aware transfer managers #452
+- Bugfixes and other things:
+  + Make sure that plugin update on Windows is able to install snapshots #418
+  + Working single repos for dropbox plugin #417
+  + Fix Unity detection for tray icon selection #413
+  + Fix Unity tray disappear after Python process crash by restarting #370
+  + Several stability bugfixes #433
+  + Don't use web sockets for IPC between daemon and GUI if in same JVM #373
+  + Fix daemon PID empty error #439
+  + Handle big repositories on dropbox backend better #353
+  + Fix homebrew formula to use java >= 1.7 #449
+  + Fix GUI not working with OAuth plugins #441
+
+### Syncany 0.4.4-alpha (Date: 22 Mar 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
 - Features and significant changes:
   + Unit tests for daemon #384/#397
+  + Completely re-written Syncany API and website, and open-sourced it
+    in the [syncany-website](https://github.com/syncany/syncany-website) repository #167
+  + Added 3rd-party plugins, and a 3rd party flag in `sy plugin list` responses
+  + Added `sy update check` to manually check for application updates #412
+  + Added `--no-delete` option for `up` #263/#399
 - Bugfixes and other things:
   + Splitting test suite between unit and integration #384/#391
   + Allowing SFTP public key auth without private key password #390
+  + Setting default maxMemory to 512M to enable booting in VMs/low memory devices.
 
 ### Syncany 0.4.3-alpha (Date: 25 Feb 2015)
 - Developer/alpha release (**We are now nearing the beta phase. Stay tuned!**)
