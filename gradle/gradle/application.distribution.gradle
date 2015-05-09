@@ -11,7 +11,8 @@ startScripts {
 	defaultJvmOpts = [ "-Dfile.encoding=utf-8" ]
 
 	doLast {
-		def defaultMaxMemory = "2048M"
+		// Also update in 'innosetup/code.iss' if changed
+		def defaultMaxMemory = "512M"
 
 		///// Windows batch files fixes/enhancements  /////
 		def winFile = file getWindowsScript()
@@ -178,7 +179,7 @@ startScripts {
 }
 
 applicationDistribution.from("${rootProject.projectDir}/") {
-	include "AUTHORS.md", "CHANGELOG.md", "LICENSE.md", "README.md"
+	include "AUTHORS.md", "CHANGELOG.md", "LICENSE-GPLv3", "LICENSE.md", "README.md"
 
 	// Copy syncany(.bat) to sy(.bat)
 	from("${startScripts.outputDir}/") {
