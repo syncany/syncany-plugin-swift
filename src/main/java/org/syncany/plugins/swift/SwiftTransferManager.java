@@ -33,6 +33,7 @@ import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
 import org.syncany.config.Config;
+import org.syncany.plugins.swift.SwiftTransferSettings;
 import org.syncany.plugins.swift.SwiftTransferManager.SwiftReadAfterWriteConsistentFeatureExtension;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.StorageException;
@@ -85,8 +86,12 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		AccountConfig authConfig = new AccountConfig();
 		authConfig.setUsername(settings.getUsername());
 		authConfig.setPassword(settings.getPassword());
+		authConfig.setTenantName(settings.getTenantName());
 		authConfig.setAuthUrl(settings.getAuthUrl());
-		authConfig.setAuthenticationMethod(AuthenticationMethod.BASIC);
+		
+		if(settings.getPreferredRegion() != null && !settings.getPreferredRegion().equals("")) {
+			authConfig.setPreferredRegion(settings.getPreferredRegion());
+		}
 
 		this.account = new AccountFactory(authConfig).createAccount();
 

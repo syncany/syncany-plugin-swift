@@ -39,10 +39,18 @@ public class SwiftTransferSettings extends TransferSettings {
 	@Setup(order = 3, sensitive = true, description = "Password")
 	@Encrypted
 	public String password;
-
+	
+	@Element(name = "tenantName", required = true)
+	@Setup(order = 4, description = "Tenant name")
+	public String tenantName;
+	
 	@Element(name = "container", required = true)
-	@Setup(order = 4, description = "Target container to use")
+	@Setup(order = 5, description = "Target container to use")
 	public String container;
+	
+	@Element(name = "preferredRegion", required = false)
+	@Setup(order = 6, description = "Preferred Swift data region (leave blank to use first applicable region)")
+	public String preferredRegion;
 
 	public String getAuthUrl() {
 		return authUrl;
@@ -55,9 +63,17 @@ public class SwiftTransferSettings extends TransferSettings {
 	public String getPassword() {
 		return password;
 	}
+	
+	public String getTenantName() {
+		return tenantName;
+	}
 
 	public String getContainer() {
 		return container;
+	}
+	
+	public String getPreferredRegion() {
+		return preferredRegion;
 	}
 
 }
