@@ -83,14 +83,29 @@ public class SwiftTransferManager extends AbstractTransferManager {
 	public SwiftTransferManager(SwiftTransferSettings settings, Config config) {
 		super(settings, config);
 
+		boolean usingKeystone = false;
+		
 		AccountConfig authConfig = new AccountConfig();
 		authConfig.setUsername(settings.getUsername());
 		authConfig.setPassword(settings.getPassword());
-		authConfig.setTenantName(settings.getTenantName());
 		authConfig.setAuthUrl(settings.getAuthUrl());
+		
+		if(settings.getTenantName() != null && !settings.getTenantName().equals("")) {
+			authConfig.setTenantName(settings.getTenantName());
+			usingKeystone = true;
+		}
+		
+		if(settings.getTenantId() != null && !settings.getTenantId().equals("")) {
+			authConfig.setTenantId(settings.getTenantId());
+			usingKeystone = true;
+		}
 		
 		if(settings.getPreferredRegion() != null && !settings.getPreferredRegion().equals("")) {
 			authConfig.setPreferredRegion(settings.getPreferredRegion());
+		}
+		
+		if(usingKeystone) {
+			authConfig.setAuthenticationMethod(AuthenticationMethod.KEYSTONE);
 		}
 
 		this.account = new AccountFactory(authConfig).createAccount();

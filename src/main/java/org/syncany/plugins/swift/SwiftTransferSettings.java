@@ -40,16 +40,20 @@ public class SwiftTransferSettings extends TransferSettings {
 	@Encrypted
 	public String password;
 	
-	@Element(name = "tenantName", required = true)
-	@Setup(order = 4, description = "Tenant name")
+	@Element(name = "tenantName", required = false)
+	@Setup(order = 4, description = "Tenant name (applicable if using Keystone to authenticate)")
 	public String tenantName;
 	
+	@Element(name = "tenantId", required = false)
+	@Setup(order = 5, description = "Tenant ID (applicable if using Keystone to authenticate)")
+	public String tenantId;
+	
 	@Element(name = "container", required = true)
-	@Setup(order = 5, description = "Target container to use")
+	@Setup(order = 6, description = "Target container to use")
 	public String container;
 	
 	@Element(name = "preferredRegion", required = false)
-	@Setup(order = 6, description = "Preferred Swift data region (leave blank to use first applicable region)")
+	@Setup(order = 7, description = "Preferred Swift data region (leave blank to use first applicable region)")
 	public String preferredRegion;
 
 	public String getAuthUrl() {
@@ -66,6 +70,10 @@ public class SwiftTransferSettings extends TransferSettings {
 	
 	public String getTenantName() {
 		return tenantName;
+	}
+	
+	public String getTenantId() {
+		return tenantId;
 	}
 
 	public String getContainer() {
