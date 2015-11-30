@@ -96,11 +96,11 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		this.account = new AccountFactory(authConfig).createAccount();
 
 		this.container = account.getContainer(settings.getContainer());
-		this.multichunksPath = "/multichunks";
-		this.databasesPath = "/databases";
-		this.actionsPath = "/actions";
-		this.transactionsPath = "/transactions";
-		this.tempPath = "/temporary";
+		this.multichunksPath = "multichunks";
+		this.databasesPath = "databases";
+		this.actionsPath = "actions";
+		this.transactionsPath = "transactions";
+		this.tempPath = "temp";
 	}
 
 	@Override
