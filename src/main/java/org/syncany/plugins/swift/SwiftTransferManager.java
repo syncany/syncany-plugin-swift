@@ -229,8 +229,13 @@ public class SwiftTransferManager extends AbstractTransferManager {
 		Map<String, T> remoteFiles = new HashMap<>();
 
 		for (StoredObject child : listing) {
-			T remoteFile = RemoteFile.createRemoteFile(child.getBareName(), remoteFileClass);
-			remoteFiles.put(child.getBareName(), remoteFile);
+			try {
+				T remoteFile = RemoteFile.createRemoteFile(child.getBareName(), remoteFileClass);
+				remoteFiles.put(child.getBareName(), remoteFile);
+			} catch(Exception e) {
+				logger.log(Level.INFO, "Cannot create instance of " + remoteFileClass.getSimpleName() + " for object " + child.getBareName()
+						+ "; maybe invalid file name pattern. Ignoring file.");
+			}
 		}
 
 		return remoteFiles;
