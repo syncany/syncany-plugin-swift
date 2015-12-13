@@ -33,6 +33,7 @@ import org.javaswift.joss.model.Account;
 import org.javaswift.joss.model.Container;
 import org.javaswift.joss.model.StoredObject;
 import org.syncany.config.Config;
+import org.syncany.plugins.swift.SwiftTransferSettings;
 import org.syncany.plugins.swift.SwiftTransferManager.SwiftReadAfterWriteConsistentFeatureExtension;
 import org.syncany.plugins.transfer.AbstractTransferManager;
 import org.syncany.plugins.transfer.StorageException;
@@ -82,20 +83,39 @@ public class SwiftTransferManager extends AbstractTransferManager {
 	public SwiftTransferManager(SwiftTransferSettings settings, Config config) {
 		super(settings, config);
 
+		boolean usingKeystone = false;
+		
 		AccountConfig authConfig = new AccountConfig();
 		authConfig.setUsername(settings.getUsername());
 		authConfig.setPassword(settings.getPassword());
 		authConfig.setAuthUrl(settings.getAuthUrl());
-		authConfig.setAuthenticationMethod(AuthenticationMethod.BASIC);
+		
+		if(settings.getTenantName() != null && !settings.getTenantName().equals("")) {
+			authConfig.setTenantName(settings.getTenantName());
+			usingKeystone = true;
+		}
+		
+		if(settings.getTenantId() != null && !settings.getTenantId().equals("")) {
+			authConfig.setTenantId(settings.getTenantId());
+			usingKeystone = true;
+		}
+		
+		if(settings.getPreferredRegion() != null && !settings.getPreferredRegion().equals("")) {
+			authConfig.setPreferredRegion(settings.getPreferredRegion());
+		}
+		
+		if(usingKeystone) {
+			authConfig.setAuthenticationMethod(AuthenticationMethod.KEYSTONE);
+		}
 
 		this.account = new AccountFactory(authConfig).createAccount();
 
 		this.container = account.getContainer(settings.getContainer());
-		this.multichunksPath = "/multichunks";
-		this.databasesPath = "/databases";
-		this.actionsPath = "/actions";
-		this.transactionsPath = "/transactions";
-		this.tempPath = "/temporary";
+		this.multichunksPath = "multichunks";
+		this.databasesPath = "databases";
+		this.actionsPath = "actions";
+		this.transactionsPath = "transactions";
+		this.tempPath = "temp";
 	}
 
 	@Override
